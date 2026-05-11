@@ -1,0 +1,4 @@
+group,n_cells,median_genes,median_counts,median_mito_pct,median_ribo_pct
+AML_Diagnosis,15667,951.0,2150.0,1.3,24.1
+AML_Treated,14988,792.0,1821.0,0.9,25.6
+Healthy,7661,955.0,2367.0,1.4,30.3
