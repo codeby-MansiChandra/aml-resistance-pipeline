@@ -88,7 +88,7 @@ GEO Raw Count Matrices (per sample .txt files)
 ## Repository Structure
 
 ```
-aml-treatment-resistance/
+aml-treatment-pipeline/
 │
 ├── data/
 │   ├── raw/               # Raw count matrices from GEO (not git tracked)
@@ -140,7 +140,7 @@ aml-treatment-resistance/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/aml-treatment-resistance.git
+git clone https://github.com/YOUR_USERNAME/aml-treatment-pipeline.git
 cd aml-treatment-resistance
 ```
 
