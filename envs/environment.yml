@@ -1,0 +1,37 @@
+name: aml-scrna
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pip
+  - jupyter
+  - notebook
+  - ipykernel
+
+  # Core scientific stack
+  - numpy>=1.23
+  - pandas>=1.5
+  - scipy>=1.9
+  - matplotlib>=3.6
+  - seaborn>=0.12
+
+  # Single-cell analysis
+  - scanpy>=1.9
+  - anndata>=0.9
+  - leidenalg
+  - python-igraph
+
+  # Batch correction
+  - harmonypy
+
+  # Doublet detection
+  - scrublet
+
+  # Differential expression & pathway enrichment
+  - pip:
+    - pydeseq2
+    - gseapy
+    - adjustText
