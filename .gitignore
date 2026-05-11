@@ -1,0 +1,11 @@
+".ipynb_checkpoints/" 
+"data/processed/*.h5ad" 
+"data/raw/*.gz" 
+"data/raw/*.tar" 
+data/raw/ 
+data/processed/ 
+.ipynb_checkpoints/ 
+**/.ipynb_checkpoints/ 
+*.h5ad 
+*.gz 
+*.tar 
