@@ -1,12 +1,17 @@
 # AML Treatment Resistance — scRNA-seq Transcriptomics Analysis
 
 **Candidate:** Mansi Chandra  
+**Organisation:** MultiOmics Intelligence — Interview Practical Task  
+**Date:** May 2026  
+**GitHub:** https://github.com/codeby-MansiChandra/aml-resistance-pipeline
+
 ---
 
 ## Biological Question
 
-> Which genes and pathways distinguish healthy bone marrow cells from treatment-resistant  
-> Acute Myeloid Leukaemia (AML) cells at single-cell resolution?
+> Which genes and pathways distinguish chemotherapy-sensitive from  
+> chemotherapy-resistant Acute Myeloid Leukaemia (AML) cells  
+> at single-cell resolution?
 
 ---
 
@@ -20,75 +25,28 @@
 
 ### Sample Groups
 
-| Group | Label | n samples | n cells (approx) | Biological meaning |
-|-------|-------|-----------|------------------|-------------------|
-| Group A | Healthy donors | 5 | ~7,700 | Normal bone marrow — treatment-sensitive baseline |
-| Group B | AML diagnosis | 16 | ~16,000 | Pre-treatment leukaemic state |
-| Group B (relapse) | AML relapse | subset | ~7,000 | Post-chemotherapy resistant disease |
+| Group | Label | n samples | n cells | Biological meaning |
+|-------|-------|-----------|---------|-------------------|
+| Group A | AML_Diagnosis | 16 | 15,667 | Day 0 — pre-treatment — chemotherapy-naive |
+| Group B | AML_Treated | 19 | 14,988 | Day 14–171 — post-chemotherapy — resistant |
+| Reference | Healthy | 6 | 7,661 | Normal bone marrow |
 
-**Primary comparison:** Healthy donors (Group A) vs AML relapse samples (Group B)  
-**Rationale:** Relapse samples represent cells that survived chemotherapy — the biological definition of treatment resistance. Healthy donors represent the normal haematopoietic baseline that chemotherapy is designed to spare.
+**Key strength:** 11 patients have paired samples at both timepoints — same patient before and after chemotherapy — removing inter-patient variability from the comparison.
 
-### Why This Dataset
-
-- Raw count matrices — full pipeline run from scratch, no preprocessing assumptions inherited
-- Small and manageable — ~38,000 cells total, fast to process
-- Clinically meaningful groups — diagnosis vs relapse gives direct treatment resistance signal
-- Paired samples — some patients have both diagnosis and relapse, removing inter-patient noise
-- Highly cited — van Galen 2019 is a landmark AML scRNA-seq paper, findings well validated
-- Rich cell type diversity — HSC, GMP, ProMono, Mono, cDC, T cells, B cells all represented
+**Resistance definition:** Cells still present weeks after chemotherapy started — resistance defined by biological survival, not a clinical label.
 
 ### Limitations
-
-- Seq-Well protocol (not 10x Genomics) — lower sensitivity than modern platforms
-- Older dataset (2019) — library sizes smaller than current standards
-- Not all patients have paired diagnosis + relapse samples
-- Healthy donors are different individuals from AML patients — some inter-individual variability
-
----
-
-## Workflow Overview
-
-```
-GEO Raw Count Matrices (per sample .txt files)
-            │
-            ▼
-┌─────────────────────────┐
-│  1. QC & Filtering      │  FastQC metrics, mitochondrial %, gene/UMI thresholds,
-│                         │  doublet detection (Scrublet), library size
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│  2. Normalisation &     │  Log-normalisation, highly variable gene selection,
-│     Integration         │  PCA, Harmony batch correction across samples
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│  3. Clustering &        │  UMAP, Leiden clustering, cell type annotation
-│     Annotation          │  using canonical haematopoietic marker genes
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│  4. Differential        │  Pseudobulk DESeq2: healthy vs AML relapse
-│     Expression          │  log2FC, padj, volcano plot, heatmap
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│  5. Pathway Enrichment  │  GSEA (MSigDB Hallmark), GO, KEGG,
-│     & Interpretation    │  LSC stemness, myeloid differentiation block
-└─────────────────────────┘
-```
+- No clinical response scores or survival data linked to individual samples
+- Early timepoints (Day 14) may not represent true resistance
+- Five samples have fewer than 100 cells — reduced statistical reliability
+- No mutation data (FLT3, NPM1) linked at single-cell level
 
 ---
 
 ## Repository Structure
 
 ```
-aml-treatment-resistance/
+aml-resistance-pipeline/
 │
 ├── data/
 │   ├── raw/               # Raw count matrices from GEO (not git tracked)
@@ -122,16 +80,69 @@ aml-treatment-resistance/
 
 ---
 
-## Key Tools
+## Workflow Overview
+
+```
+Raw count matrices (GEO: GSE116256)
+            │
+            ▼
+┌─────────────────────────┐
+│  1. QC & Filtering      │  Mitochondrial %, gene count thresholds,
+│  notebook 01            │  gene filtering — 38,316 cells retained
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  2. Normalisation &     │  Log-normalisation, 2000 HVGs,
+│     Integration         │  PCA, Harmony batch correction
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  3. Clustering &        │  UMAP, Leiden clustering,
+│     Annotation          │  8 cell types annotated, LSC score
+│  notebook 02            │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  4. Differential        │  Pseudobulk DESeq2 — 691 significant DEGs
+│     Expression          │  HOXA cluster lost, immune checkpoints gained
+│  notebook 03            │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  5. Pathway Enrichment  │  GSEA Hallmark, GO, KEGG —
+│  notebook 04            │  32 significant pathways
+│                         │  Immune evasion signature identified
+└─────────────────────────┘
+```
+
+---
+
+## Key Findings
+
+| Analysis | Finding |
+|----------|---------|
+| Cell types | 8 cell types: ProMono-like, GMP-like, Mono-like, T cell, NK cell, Erythroid, cDC, B cell |
+| Top DEGs upregulated | KCNH2, SLC25A21, HCN3 — metabolic and ion channel reprogramming |
+| Top DEGs downregulated | HOXA3, HOXA4, HOXA6, HOXA-AS3 — entire HOXA cluster lost in resistance |
+| Immune checkpoints | CD274 (PD-L1) and TIGIT upregulated — immune evasion |
+| GSEA pathways | Interferon response, Hedgehog signalling, EMT enriched in resistant cells |
+| Biological story | Resistant cells activate immune evasion while losing normal haematopoietic identity |
+
+---
+
+## Tools & Packages
 
 | Step | Tool | Reason |
 |------|------|--------|
-| QC & preprocessing | Scanpy, Scrublet | Standard scRNA-seq QC pipeline |
-| Batch correction | Harmony | Correct for per-sample technical variation |
-| Clustering | Leiden algorithm | Resolution-flexible, community standard |
-| Cell type annotation | Canonical markers | Haematopoietic lineage markers well established |
-| Differential expression | DESeq2 (pseudobulk) | Accounts for within-patient correlation, gold standard |
-| Pathway enrichment | GSEApy, clusterProfiler | GSEA + ORA on validated gene sets |
+| QC & preprocessing | Scanpy | Standard scRNA-seq pipeline |
+| Batch correction | Harmony | Correct per-sample technical variation |
+| Clustering | Leiden algorithm | Resolution-flexible community detection |
+| Differential expression | PyDESeq2 (pseudobulk) | Gold standard for scRNA-seq DE |
+| Pathway enrichment | GSEApy | GSEA + ORA on validated gene sets |
 | Visualisation | matplotlib, seaborn | Volcano, heatmap, UMAP, dot plots |
 
 ---
@@ -140,8 +151,8 @@ aml-treatment-resistance/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/aml-treatment-resistance.git
-cd aml-treatment-resistance
+git clone https://github.com/codeby-MansiChandra/aml-resistance-pipeline.git
+cd aml-resistance-pipeline
 ```
 
 ### 2. Set up the environment
@@ -151,36 +162,16 @@ conda activate aml-scrna
 ```
 
 ### 3. Download the data
-See `data/raw/README.md` for step-by-step GEO download instructions.  
-GEO accession: **GSE116256**
+Download raw count matrices from GEO accession **GSE116256**:
+```bash
+# Go to: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE116256
+# Download GSE116256_RAW.tar and extract into data/raw/
+```
 
 ### 4. Run notebooks in order
 ```
-01 → 02 → 03 → 04
+01_qc_preprocessing → 02_clustering_annotation → 03_differential_expression → 04_pathway_enrichment
 ```
-Each notebook saves its output to `data/processed/` or `results/` for the next step.
-
----
-
-## Biological Background
-
-Acute Myeloid Leukaemia (AML) is a blood cancer characterised by rapid proliferation of immature myeloid cells (blasts) in the bone marrow. Standard treatment is induction chemotherapy (cytarabine + anthracycline). While ~70% of patients achieve complete remission, ~50% relapse with chemotherapy-resistant disease — the central clinical problem this project addresses.
-
-**Key resistance mechanisms in AML:**
-- Leukaemic stem cells (LSCs) — quiescent, evade chemotherapy, drive relapse
-- Myeloid differentiation block — blasts fail to mature, remain proliferative
-- FLT3, NPM1, DNMT3A mutations — alter stem cell self-renewal and drug response
-- Immune evasion — downregulation of MHC and NK ligands in resistant cells
-
----
-
-## Expected Key Findings
-
-Based on published literature, the analysis is expected to identify:
-- Upregulation of LSC stemness genes (CD34, HOXA, MEIS1) in relapse vs healthy
-- Enrichment of OXPHOS and metabolic reprogramming pathways in resistant cells
-- Downregulation of myeloid differentiation genes (CEBPA, SPI1) in AML
-- Immune evasion signatures in the AML tumour microenvironment
 
 ---
 
@@ -188,4 +179,8 @@ Based on published literature, the analysis is expected to identify:
 
 van Galen P, et al. (2019). Single-Cell RNA-Seq Reveals AML Hierarchies Relevant to Disease Progression and Immunity. *Cell*, 176(6), 1265–1281. https://doi.org/10.1016/j.cell.2019.01.031
 
+---
 
+## License
+
+This project is for interview assessment purposes — MultiOmics Intelligence candidate practical task, May 2026.
