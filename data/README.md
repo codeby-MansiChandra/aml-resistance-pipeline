@@ -1,6 +1,4 @@
 # Data Download Instructions
-
-Raw data files are in the raw file (file size was small).
 Follow the steps below to download GSE116256.
 
 ---
